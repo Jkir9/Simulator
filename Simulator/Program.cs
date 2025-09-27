@@ -38,6 +38,9 @@ class Program
         
         bool showDetails = ReadYesNo("전투 상세 내역을 보시겠습니까? (Y/N): ");
         int simulationCount = ReadInt("시뮬레이션을 몇 번 반복하시겠습니까? (예: 1000): ");
+        
+        // 새로 추가된 부분: 분당 공격 불가 시간 입력
+        float downtimePerMinute = ReadFloat("보스 패턴으로 인한 분당 공격 불가 시간(초)을 입력하세요: ");
         Console.WriteLine();
 
         // 1. 플레이어 스탯 입력
@@ -79,26 +82,27 @@ class Program
 
         // 새로 추가된 부분: 입력 값 요약
         Console.WriteLine("\n\n---------------- 입력 데이터 요약 ----------------");
-        Console.WriteLine("### 플레이어 스탯 ###");
+        Console.WriteLine("플레이어 스탯");
         Console.WriteLine($"공격력: {player.baseAttack:F2} | 치명타율: {player.criticalChance * 100}% | 치명타 추가 데미지: {player.criticalDamageBonus * 100}% | 방어력 무시율: {player.defenseIgnoreRate * 100}% | 공격속도: {player.attackSpeed:F2}");
-        Console.WriteLine("\n### 몬스터 스탯 ###");
+        Console.WriteLine("\n몬스터 스탯");
         Console.WriteLine($"체력: {monster.maxHealth:F2} | 방어율: {monster.defenseRate}%");
-        Console.WriteLine("\n### 스킬 스탯 ###");
+        Console.WriteLine($"보스 패턴으로 인한 분당 공격 불가 시간: {downtimePerMinute:F2}초");
+        Console.WriteLine("\n스킬 스탯");
         Console.WriteLine($"평타 - 데미지 비율: {normalAttack.damageRatio:F2} | 타수: {normalAttack.hitCount} | 딜레이: {normalAttack.delay:F2}초");
         Console.WriteLine($"스킬 - 데미지 비율: {skillAttack.damageRatio:F2} | 타수: {skillAttack.hitCount} | 딜레이: {skillAttack.delay:F2}초 | 쿨타임: {skillAttack.cooldown:F2}초");
         Console.WriteLine("-------------------------------------------------");
 
         // 4. 평타 시뮬레이션 실행 및 결과 출력
         var normalAttackResults = RunMultipleSimulations(simulationCount, player, monster, normalAttack, showDetails);
-        PrintSimulationResults(normalAttackResults, monster.maxHealth, "평타");
+        PrintSimulationResults(normalAttackResults, monster.maxHealth, "평타", downtimePerMinute);
 
         // 5. 스킬 공격 시뮬레이션 실행 및 결과 출력
         var skillAttackResults = RunMultipleSimulations(simulationCount, player, monster, skillAttack, showDetails);
-        PrintSimulationResults(skillAttackResults, monster.maxHealth, "스킬");
+        PrintSimulationResults(skillAttackResults, monster.maxHealth, "스킬", downtimePerMinute);
 
         // 6. 스킬 순환 시뮬레이션 실행 및 결과 출력
         var rotationResults = RunMultipleRotationSimulations(simulationCount, player, monster, normalAttack, skillAttack, showDetails);
-        PrintSimulationResults(rotationResults, monster.maxHealth, "스킬 순환");
+        PrintSimulationResults(rotationResults, monster.maxHealth, "스킬 순환", downtimePerMinute);
     }
 
     /// <summary>
@@ -132,10 +136,10 @@ class Program
     /// </summary>
     static float SimulateCombat(PlayerStats player, MonsterStats monster, SkillStats skill, string attackType, bool showDetails)
     {
-        monster.currentHealth = monster.maxHealth; // 체력 초기화
+        monster.currentHealth = monster.maxHealth;
         float totalTime = 0f;
         int attackCount = 0;
-        float finalDamage = 0f; // 추가: 데미지가 너무 낮아 루프가 무한정 도는 것을 방지
+        float finalDamage = 0f;
         
         while (monster.currentHealth > 0)
         {
@@ -147,7 +151,6 @@ class Program
                 player.defenseIgnoreRate
             );
 
-            // 무한 루프 방지: 데미지가 0에 가까우면 루프 중단
             if (damage < 0.001f && finalDamage > monster.maxHealth * 0.99f) break;
 
             monster.currentHealth -= damage;
@@ -178,7 +181,6 @@ class Program
 
         while(monster.currentHealth > 0)
         {
-            // 스킬 쿨타임이 지났으면 스킬 사용
             if (totalTime >= nextSkillAvailableTime)
             {
                 float totalSkillDamage = 0;
@@ -207,7 +209,7 @@ class Program
                 skillCasts++;
                 nextSkillAvailableTime = totalTime + skill.cooldown;
             }
-            else // 스킬 쿨타임 중에는 평타 사용
+            else
             {
                 float damage = DamageCalculator.CalculateOutgoingDamage(
                     player.baseAttack * normal.damageRatio,
@@ -235,7 +237,7 @@ class Program
     /// <summary>
     /// 시뮬레이션 결과(TTK 리스트)를 분석하여 출력합니다.
     /// </summary>
-    static void PrintSimulationResults(List<float> ttks, float monsterHealth, string attackType)
+    static void PrintSimulationResults(List<float> ttks, float monsterHealth, string attackType, float downtimePerMinute)
     {
         float averageTtk = ttks.Average();
         float averageDps = monsterHealth / averageTtk;
@@ -250,6 +252,16 @@ class Program
         Console.WriteLine($"평균 DPS: {averageDps:F2}");
         Console.WriteLine("----------------------------------");
         PrintTtkGraph(ttks);
+        
+        // 새로 추가된 부분: 다운타임 반영 결과
+        float totalDowntime = (averageTtk / 60.0f) * downtimePerMinute;
+        float finalTtkWithDowntime = averageTtk + totalDowntime;
+        float finalDpsWithDowntime = monsterHealth / finalTtkWithDowntime;
+
+        Console.WriteLine($"\n** 보스 패턴을 고려한 최종 결과 (분당 {downtimePerMinute:F2}초 다운타임 적용) **");
+        Console.WriteLine($"최종 평균 처치 시간: {finalTtkWithDowntime:F2}초");
+        Console.WriteLine($"최종 평균 DPS: {finalDpsWithDowntime:F2}");
+        Console.WriteLine("----------------------------------");
     }
 
     /// <summary>
@@ -276,7 +288,7 @@ class Program
         foreach (float ttk in ttks)
         {
             int bucketIndex = (int)((ttk - minTtk) / bucketSize);
-            if (bucketIndex == bucketCount) bucketIndex = bucketCount - 1;
+            if (bucketIndex >= bucketCount) bucketIndex = bucketCount - 1;
             buckets[bucketIndex]++;
         }
 
@@ -294,9 +306,6 @@ class Program
             Console.WriteLine($" ({percentage:P1})");
         }
     }
-    
-    // ... (ReadFloat, ReadInt, ReadYesNo 도우미 함수들은 기존과 동일) ...
-    // 아래 코드를 복사해서 붙여넣으세요.
     
     static float ReadFloat(string prompt)
     {

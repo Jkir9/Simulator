@@ -1,0 +1,15 @@
+/workspaces/Simulator/Simulator/bin/Debug/net8.0/Simulator
+/workspaces/Simulator/Simulator/bin/Debug/net8.0/Simulator.deps.json
+/workspaces/Simulator/Simulator/bin/Debug/net8.0/Simulator.runtimeconfig.json
+/workspaces/Simulator/Simulator/bin/Debug/net8.0/Simulator.dll
+/workspaces/Simulator/Simulator/bin/Debug/net8.0/Simulator.pdb
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.AssemblyInfoInputs.cache
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.AssemblyInfo.cs
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.csproj.CoreCompileInputs.cache
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.sourcelink.json
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.dll
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/refint/Simulator.dll
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.pdb
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/Simulator.genruntimeconfig.cache
+/workspaces/Simulator/Simulator/obj/Debug/net8.0/ref/Simulator.dll
