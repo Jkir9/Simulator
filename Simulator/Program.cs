@@ -79,6 +79,19 @@ class Program
             delay = ReadFloat("스킬의 기본 딜레이를 입력하세요 (예: 0.5): "),
             cooldown = ReadFloat("스킬의 쿨타임을 입력하세요 (예: 3.0): ")
         };
+        
+        // 액티브 스킬 개수 입력 (최대 6) 및 스킬 정보에 곱셈 적용
+        int activeSkillCount;
+        while (true)
+        {
+            activeSkillCount = ReadInt("사용할 액티브 스킬 수를 입력하세요 (1~6): ");
+            if (activeSkillCount >= 1 && activeSkillCount <= 6) break;
+            Console.WriteLine("잘못된 입력입니다. 1에서 6 사이의 값을 입력해주세요.");
+        }
+
+        // 요구사항: 입력한 스킬 정보(데미지 비율, 타수)에 스킬 개수만큼 곱함
+        skillAttack.damageRatio *= activeSkillCount;
+        skillAttack.hitCount *= activeSkillCount;
 
         // 새로 추가된 부분: 입력 값 요약
         Console.WriteLine("\n\n---------------- 입력 데이터 요약 ----------------");
